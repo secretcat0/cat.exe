@@ -1,0 +1,1326 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>CAT.EXE — 8‑BIT HORROR</title>
+<style>
+  :root{
+    background: #000;
+    color: #0f0;
+    font-family: 'Courier New', monospace;
+    image-rendering: pixelated;
+  }
+  body{
+    margin: 0;
+    background: 
+      radial-gradient(circle at 20% 30%, #001100 0%, #000 70%),
+      repeating-linear-gradient(0deg, transparent, transparent 2px, #001a00 2px, #001a00 4px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  h1{
+    margin: 0;
+    color: #ff0000;
+    text-shadow: 0 0 10px #f00, 0 0 20px #f00;
+    font-size: 36px;
+    letter-spacing: 2px;
+    animation: glitch 3s infinite;
+  }
+  @keyframes glitch {
+    0%, 100% { transform: translate(0); }
+    1% { transform: translate(-2px, 1px); }
+    2% { transform: translate(1px, -2px); }
+    3% { transform: translate(-1px, 2px); }
+    4% { transform: translate(2px, -1px); }
+    5% { transform: translate(0); }
+  }
+  
+  canvas{
+    image-rendering: pixelated;
+    background: #000;
+    border: 4px solid #0a0;
+    box-shadow: 
+      0 0 20px #0f0,
+      inset 0 0 20px #0a0;
+    border-radius: 4px;
+  }
+  #ui{
+    width: 820px;
+    max-width: 95%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(0, 20, 0, 0.8);
+    border: 2px solid #0a0;
+    padding: 10px;
+    border-radius: 4px;
+    box-shadow: 0 0 10px #0f0;
+  }
+  .hud{
+    color: #0f0;
+    font-size: 14px;
+    text-shadow: 0 0 5px #0f0;
+  }
+  .bar{
+    width: 200px;
+    height: 16px;
+    border: 2px solid #000;
+    background: #002200;
+    box-shadow: 
+      inset 0 0 10px #000,
+      0 0 5px #0a0;
+    position: relative;
+    overflow: hidden;
+  }
+  .bar > .fill{
+    height: 100%;
+    transition: width 0.3s;
+  }
+  #hungerFill{
+    background: repeating-linear-gradient(
+      45deg,
+      #ff3333,
+      #ff3333 4px,
+      #cc0000 4px,
+      #cc0000 8px
+    );
+    box-shadow: inset 0 0 10px #ff0000;
+  }
+  #staminaFill{
+    background: repeating-linear-gradient(
+      45deg,
+      #00cc00,
+      #00cc00 4px,
+      #009900 4px,
+      #009900 8px
+    );
+    box-shadow: inset 0 0 10px #0f0;
+  }
+  .menu{
+    background: rgba(0, 20, 0, 0.9);
+    border: 2px solid #0a0;
+    padding: 15px;
+    color: #0f0;
+    box-shadow: 0 0 20px #0f0;
+    border-radius: 4px;
+  }
+  .menu button{
+    margin: 6px;
+    padding: 10px 15px;
+    background: #001100;
+    color: #0f0;
+    border: 1px solid #0a0;
+    font-family: 'Courier New', monospace;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-shadow: 0 0 5px #0f0;
+  }
+  .menu button:hover{
+    background: #003300;
+    box-shadow: 0 0 10px #0f0;
+    transform: translateY(-1px);
+  }
+  #overlay{
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 1000;
+  }
+  .terminal-text{
+    color: #0f0;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    line-height: 1.4;
+  }
+  .scanlines{
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      to bottom,
+      transparent 50%,
+      rgba(0, 255, 0, 0.03) 50%
+    );
+    background-size: 100% 4px;
+    pointer-events: none;
+    z-index: 9999;
+  }
+  .static{
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" opacity="0.02"><filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3"/></filter><rect width="100" height="100" filter="url(%23noise)"/></svg>');
+    pointer-events: none;
+    z-index: 9998;
+  }
+  .server-icon{
+    width: 12px;
+    height: 12px;
+    background: #0f0;
+    margin: 0 5px;
+    display: inline-block;
+    vertical-align: middle;
+    box-shadow: 0 0 5px #0f0;
+  }
+  .server-icon.blink{
+    animation: server-blink 1s infinite;
+  }
+  @keyframes server-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+</style>
+</head>
+<body>
+<div class="scanlines"></div>
+<div class="static"></div>
+
+<h1>CAT.EXE</h1>
+<div id="ui" style="display:none">
+  <div class="hud">
+    <div><span class="server-icon blink"></span> HUNGER.EXE: <span id="hungerPercent">100%</span></div>
+    <div class="bar"><div id="hungerFill" class="fill" style="width:100%"></div></div>
+  </div>
+  <div class="hud">
+    <div><span class="server-icon"></span> STAMINA: <span id="staminaPercent">100%</span></div>
+    <div class="bar"><div id="staminaFill" class="fill" style="width:100%"></div></div>
+  </div>
+  <div class="hud" style="text-align:center">
+    <div><span class="server-icon"></span> SERVER: <span id="levelLabel">01</span></div>
+    <div>TIME: <span id="timeLeft" style="color:#ff0000;text-shadow:0 0 5px #f00;">00:00</span></div>
+    <div style="font-size:10px;color:#666">[P]ause [M]enu</div>
+  </div>
+</div>
+
+<canvas id="game" width="640" height="384" style="display:none"></canvas>
+
+<div style="width:820px;max-width:95%;display:flex;justify-content:space-between;gap:8px;margin-top:20px">
+  <div class="menu" id="menuBox">
+    <div style="color:#ff0000;font-size:20px;margin-bottom:10px;text-shadow:0 0 10px #f00;">
+      SYSTEM MENU — SELECT SERVER
+    </div>
+    <div style="color:#0f0;font-size:12px;margin-bottom:15px;border-bottom:1px solid #0a0;padding-bottom:10px;">
+      <span class="server-icon blink"></span> WARNING: Cat.exe process detected in memory
+    </div>
+    
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:15px 0;">
+      <div id="levelSelect"></div>
+    </div>
+    
+    <div style="margin-top:15px;padding:10px;background:#001100;border:1px solid #0a0;">
+      <div style="color:#0f0;font-size:12px;margin-bottom:5px;">SERVER INFO:</div>
+      <div style="color:#666;font-size:11px;" id="levelDesc">Loading server data...</div>
+    </div>
+    
+    <div style="margin-top:15px;display:flex;gap:10px;">
+      <button id="startBtn"><span class="server-icon"></span> CONNECT</button>
+      <button id="creditsBtn"><span class="server-icon"></span> CREDITS</button>
+    </div>
+  </div>
+  
+  <div class="menu" style="flex:1;min-height:300px;">
+    <div style="color:#ff0000;font-weight:bold;border-bottom:1px solid #0a0;padding-bottom:5px;margin-bottom:10px;">
+      SYSTEM LOG
+    </div>
+    <div style="color:#0f0;font-size:12px;line-height:1.4;">
+      <div>> PROCESS ID: CAT.EXE [CORRUPTED]</div>
+      <div>> STATUS: <span style="color:#ff0000">HOSTILE</span></div>
+      <div>> LOCATION: SERVER FARM 01</div>
+      <div>> OBJECTIVE: SURVIVE AND CONTAIN</div>
+      <div>> THREAT LEVEL: <span id="threatLevel" style="color:#ff9900">CALCULATING...</span></div>
+      <br>
+      <div style="color:#666;">> CONTROLS:</div>
+      <div style="color:#666;">> WASD/ARROWS - MOVE</div>
+      <div style="color:#666;">> SHIFT - SPRINT (DRAINS STAMINA)</div>
+      <div style="color:#666;">> COLLECT "EXE FILES" TO SUSTAIN</div>
+      <div style="color:#666;">> AVOID THE CORRUPTED PROCESS</div>
+    </div>
+  </div>
+</div>
+
+<div id="overlay"></div>
+
+<script>
+// ======================
+// 8-BIT HORROR SERVER WORLD
+// ======================
+
+const SCALE = 3;
+const SPRITE_SCALE = 6;
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+ctx.imageSmoothingEnabled = false;
+
+// Увеличим мир для процедурной генерации
+const WORLD_W = 2560;
+const WORLD_H = 1536;
+
+canvas.style.width = (canvas.width * 1) + 'px';
+canvas.style.height = (canvas.height * 1) + 'px';
+
+// Спрайты котов (без изменений)
+const spriteRows = [
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0],
+[0,1,1,0,0,1,1,0,0,0,0,0,0,0,0,0],
+[0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0],
+[0,1,2,1,1,2,1,0,0,0,0,0,0,0,0,0],
+[0,0,1,1,1,1,3,1,1,1,1,1,0,0,0,0],
+[0,0,0,3,3,3,3,1,1,1,1,0,1,0,0,0],
+[0,0,0,1,4,1,1,1,1,1,1,0,0,1,0,0],
+[0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,1],
+[0,0,0,1,0,1,0,0,1,0,1,0,0,0,0,1],
+[0,0,0,1,0,1,0,0,1,0,1,0,0,0,0,0],
+[0,0,0,1,0,1,0,0,1,0,1,0,0,0,0,0]
+];
+const SPR_W = 16, SPR_H = 12;
+
+// Палитры
+const palPlayer = {
+  0: null,
+  1: '#9aa4a8',
+  2: '#000000',
+  3: '#d9534f',
+  4: '#f1c232'
+};
+const palEnemy = {
+  0: null,
+  1: '#ffffff',
+  2: '#ff0000',
+  3: '#ffffff',
+  4: '#ffffff'
+};
+
+// ======================
+// ПРОЦЕДУРНАЯ ГЕНЕРАЦИЯ МИРА
+// ======================
+
+function generateWorld(seed) {
+  const world = {
+    floors: [],
+    walls: [],
+    servers: [],
+    cables: [],
+    hazards: [],
+    spawns: []
+  };
+  
+  const rng = (max, min = 0) => Math.floor(seed * 987654 + min) % max;
+  seed = (seed * 9301 + 49297) % 233280;
+  
+  // Генерируем основную сетку серверной
+  const gridSize = 160;
+  const cols = Math.floor(WORLD_W / gridSize);
+  const rows = Math.floor(WORLD_H / gridSize);
+  
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      const cellX = x * gridSize;
+      const cellY = y * gridSize;
+      
+      // Пол
+      world.floors.push({
+        x: cellX, y: cellY,
+        w: gridSize, h: gridSize,
+        type: rng(3)
+      });
+      
+      // Серверные стойки (60% клеток)
+      if (rng(10) < 6 && x > 0 && x < cols - 1 && y > 0 && y < rows - 1) {
+        world.servers.push({
+          x: cellX + 20, y: cellY + 10,
+          w: 120, h: 140,
+          id: `SRV_${x}_${y}`,
+          active: rng(2) === 0
+        });
+      }
+      
+      // Стены по краям и некоторые внутренние
+      if (x === 0 || x === cols - 1 || y === 0 || y === rows - 1 || rng(20) === 0) {
+        world.walls.push({
+          x: cellX, y: cellY,
+          w: gridSize, h: gridSize
+        });
+      }
+      
+      // Кабели
+      if (rng(4) === 0) {
+        world.cables.push({
+          x: cellX + rng(100), y: cellY + rng(100),
+          length: 40 + rng(80),
+          horizontal: rng(2) === 0
+        });
+      }
+      
+      // Опасности (15% клеток)
+      if (rng(100) < 15) {
+        world.hazards.push({
+          x: cellX + 20 + rng(120), y: cellY + 20 + rng(120),
+          w: 30 + rng(50), h: 30 + rng(50),
+          type: ['spark', 'smoke', 'radiation'][rng(3)],
+          damage: 5 + rng(15)
+        });
+      }
+    }
+  }
+  
+  // Гарантируем проходимость - создаем коридоры
+  createPathways(world, cols, rows, gridSize, rng);
+  
+  // Спавн игрока и врага в разных концах
+  world.spawns.push({
+    player: {x: gridSize * 2, y: gridSize * 2},
+    enemy: {x: WORLD_W - gridSize * 3, y: WORLD_H - gridSize * 3}
+  });
+  
+  return world;
+}
+
+function createPathways(world, cols, rows, gridSize, rng) {
+  // Удаляем некоторые стены для создания лабиринта
+  for (let i = 0; i < world.walls.length; i++) {
+    const wall = world.walls[i];
+    const gridX = Math.floor(wall.x / gridSize);
+    const gridY = Math.floor(wall.y / gridSize);
+    
+    // Оставляем только внешние стены и некоторые внутренние
+    if (gridX > 0 && gridX < cols - 1 && gridY > 0 && gridY < rows - 1) {
+      if (rng(3) > 0) { // 66% шанс удалить внутреннюю стену
+        world.walls.splice(i, 1);
+        i--;
+      }
+    }
+  }
+  
+  // Добавляем проходы в оставшихся стенах
+  for (let i = 0; i < world.walls.length; i++) {
+    const wall = world.walls[i];
+    if (wall.w === gridSize && wall.h === gridSize) {
+      // Создаем дверь/проход
+      world.walls[i] = {
+        x: wall.x, y: wall.y,
+        w: gridSize, h: 20,
+        isDoor: true
+      };
+      // Добавляем вторую часть стены
+      world.walls.push({
+        x: wall.x, y: wall.y + gridSize - 20,
+        w: gridSize, h: 20,
+        isDoor: true
+      });
+    }
+  }
+}
+
+// ======================
+// ИГРОВОЕ СОСТОЯНИЕ
+// ======================
+
+let keys = {};
+let gameState = 'menu';
+let selectedLevel = 1;
+let player, enemy, foods, obstacles, timerLeft, hunger, stamina;
+let levelTime = 45;
+let lastTime = 0;
+let spawnAcc = 0;
+let currentWorld = null;
+let overlay = document.getElementById('overlay');
+let threatLevels = ['LOW', 'MODERATE', 'HIGH', 'CRITICAL'];
+let glitchEffect = 0;
+
+// ======================
+// УРОВНИ (СЕРВЕРЫ)
+// ======================
+
+const serverConfigs = [
+  { id: 1, name: 'MAINFRAME', time: 45, seed: 0.123, desc: 'Primary data cluster. Minimal corruption.' },
+  { id: 2, name: 'BACKUP-01', time: 50, seed: 0.456, desc: 'Redundant storage. Strange readings detected.' },
+  { id: 3, name: 'NET-CORE', time: 55, seed: 0.789, desc: 'Network backbone. Corruption spreading.' },
+  { id: 4, name: 'SEC-SRV', time: 60, seed: 0.234, desc: 'Security server. Multiple hostiles detected.' },
+  { id: 5, name: 'AI-NODE', time: 65, seed: 0.567, desc: 'AI processing unit. Cat.exe evolving.' },
+  { id: 6, name: 'DB-CLUSTER', time: 70, seed: 0.890, desc: 'Database farm. Reality glitching.' },
+  { id: 7, name: 'QUANT-CORE', time: 75, seed: 0.345, desc: 'Quantum processor. Time anomalies.' },
+  { id: 8, name: 'NEXUS', time: 80, seed: 0.678, desc: 'System nexus. Cat.exe dominant.' },
+  { id: 9, name: 'VOID-GATE', time: 85, seed: 0.901, desc: 'Unknown origin. Reality failing.' },
+  { id: 10, name: 'SOURCE', time: 90, seed: 0.112, desc: 'Cat.exe origin. Final containment.' }
+];
+
+// ======================
+// ИНИЦИАЛИЗАЦИЯ УРОВНЯ
+// ======================
+
+function initLevel(n) {
+  selectedLevel = n;
+  const cfg = serverConfigs[n-1];
+  levelTime = cfg.time;
+  timerLeft = levelTime;
+  hunger = 100;
+  stamina = 100;
+  foods = [];
+  
+  // Генерируем мир
+  currentWorld = generateWorld(cfg.seed);
+  obstacles = [...currentWorld.walls];
+  
+  // Добавляем опасности как препятствия
+  currentWorld.hazards.forEach(h => {
+    obstacles.push({
+      x: h.x, y: h.y,
+      w: h.w, h: h.h,
+      hazard: true,
+      type: h.type,
+      damage: h.damage
+    });
+  });
+  
+  // Добавляем EXE файлы (еда)
+  const foodCount = 8 + n * 2;
+  for (let i = 0; i < foodCount; i++) {
+    let placed = false;
+    let attempts = 0;
+    while (!placed && attempts < 100) {
+      const x = 50 + Math.random() * (WORLD_W - 100);
+      const y = 50 + Math.random() * (WORLD_H - 100);
+      
+      // Проверяем, не в стене ли
+      let collides = false;
+      for (const wall of currentWorld.walls) {
+        if (x >= wall.x && x <= wall.x + wall.w &&
+            y >= wall.y && y <= wall.y + wall.h) {
+          collides = true;
+          break;
+        }
+      }
+      
+      if (!collides) {
+        foods.push({
+          x: x, y: y,
+          w: 16, h: 16,
+          type: 'exe',
+          value: 20 + Math.floor(Math.random() * 15)
+        });
+        placed = true;
+      }
+      attempts++;
+    }
+  }
+  
+  // Игрок и враг
+  player = {
+    x: currentWorld.spawns[0].player.x,
+    y: currentWorld.spawns[0].player.y,
+    w: SPR_W * SPRITE_SCALE,
+    h: SPR_H * SPRITE_SCALE,
+    spd: 120,
+    velX: 0,
+    velY: 0,
+    invulnerable: 0
+  };
+  
+  enemy = {
+    x: currentWorld.spawns[0].enemy.x,
+    y: currentWorld.spawns[0].enemy.y,
+    w: SPR_W * SPRITE_SCALE,
+    h: SPR_H * SPRITE_SCALE,
+    spd: 70 + n * 4,
+    aggro: true,
+    lastSeen: {x: player.x, y: player.y},
+    patrolPoints: []
+  };
+  
+  // Точки патруля для врага
+  for (let i = 0; i < 5; i++) {
+    enemy.patrolPoints.push({
+      x: 200 + Math.random() * (WORLD_W - 400),
+      y: 200 + Math.random() * (WORLD_H - 400)
+    });
+  }
+  
+  spawnAcc = 0;
+  glitchEffect = 0;
+  
+  // Обновляем описание
+  document.getElementById('levelDesc').textContent = cfg.desc;
+  document.getElementById('threatLevel').textContent = 
+    threatLevels[Math.min(n-1, threatLevels.length-1)];
+  document.getElementById('threatLevel').style.color = 
+    ['#0f0', '#ff9900', '#ff6600', '#ff0000'][Math.min(n-1, 3)];
+}
+
+// ======================
+// ВВОД
+// ======================
+
+window.addEventListener('keydown', e => {
+  const key = e.key.toLowerCase();
+  keys[key] = true;
+  
+  if (key === 'p' && gameState === 'playing') togglePause();
+  if (key === 'm' && gameState === 'playing') showMenu();
+  if (key === 'escape') {
+    if (gameState === 'playing') togglePause();
+    else if (gameState === 'paused') togglePause();
+  }
+  
+  // Секретная команда
+  if (keys['control'] && keys['alt'] && keys['c']) {
+    hunger = 100;
+    stamina = 100;
+  }
+});
+
+window.addEventListener('keyup', e => {
+  keys[e.key.toLowerCase()] = false;
+});
+
+// ======================
+// ИГРОВОЙ ЦИКЛ
+// ======================
+
+function togglePause() {
+  if (gameState === 'playing') {
+    gameState = 'paused';
+    showOverlay('SYSTEM PAUSED\n\n> Press P to resume\n> Press M for menu');
+  } else if (gameState === 'paused') {
+    gameState = 'playing';
+    hideOverlay();
+    lastTime = performance.now();
+  }
+}
+
+function showMenu() {
+  gameState = 'menu';
+  document.getElementById('menuBox').style.display = 'block';
+  document.getElementById('ui').style.display = 'none';
+  canvas.style.display = 'none';
+  hideOverlay();
+}
+
+function hideOverlay() {
+  overlay.innerHTML = '';
+  overlay.style.display = 'none';
+}
+
+function showOverlay(msg) {
+  overlay.style.display = 'flex';
+  overlay.innerHTML = `
+    <div style="background:#000;border:2px solid #0a0;padding:20px;color:#0f0;font-family:monospace;max-width:500px;box-shadow:0 0 30px #0f0;">
+      <div style="color:#ff0000;font-size:18px;margin-bottom:15px;">SYSTEM ALERT</div>
+      <div style="white-space:pre-wrap;font-size:14px;">${msg}</div>
+      <div style="margin-top:20px;color:#666;font-size:12px;">[SERVER: ${selectedLevel}]</div>
+    </div>
+  `;
+}
+
+function gameOver(win) {
+  gameState = 'gameover';
+  
+  if (win && selectedLevel === 10) {
+    setTimeout(() => playCutscene(), 800);
+  } else if (win) {
+    showOverlay(`SERVER ${selectedLevel} CONTAINED\n\n> Cat.exe temporarily suppressed\n> Press any key to continue`);
+    setTimeout(() => {
+      window.addEventListener('keydown', () => {
+        window.removeEventListener('keydown', arguments.callee);
+        showMenu();
+      }, { once: true });
+    }, 500);
+  } else {
+    showOverlay(`SYSTEM FAILURE\n\n> Cat.exe process takeover complete\n> Memory corrupted\n> Press any key to reboot`);
+    setTimeout(() => {
+      window.addEventListener('keydown', () => {
+        window.removeEventListener('keydown', arguments.callee);
+        showMenu();
+      }, { once: true });
+    }, 500);
+  }
+}
+
+function update(dt) {
+  if (gameState !== 'playing') return;
+  
+  // Уменьшаем неуязвимость
+  if (player.invulnerable > 0) {
+    player.invulnerable -= dt;
+  }
+  
+  // Глитч-эффект на поздних уровнях
+  if (selectedLevel > 5) {
+    glitchEffect += dt;
+  }
+  
+  // Движение игрока
+  let mx = 0, my = 0;
+  if (keys['arrowup'] || keys['w']) my -= 1;
+  if (keys['arrowdown'] || keys['s']) my += 1;
+  if (keys['arrowleft'] || keys['a']) mx -= 1;
+  if (keys['arrowright'] || keys['d']) mx += 1;
+  
+  let speed = player.spd;
+  if ((keys['shift'] || keys['shiftleft']) && stamina > 0) {
+    speed *= 1.8;
+    stamina -= dt * 30;
+  } else {
+    stamina = Math.min(100, stamina + dt * 12);
+  }
+  
+  if (mx !== 0 || my !== 0) {
+    const len = Math.hypot(mx, my) || 1;
+    player.velX = (mx / len) * speed * dt;
+    player.velY = (my / len) * speed * dt;
+  } else {
+    player.velX = 0;
+    player.velY = 0;
+  }
+  
+  // Коллизии
+  const newX = player.x + player.velX;
+  const newY = player.y + player.velY;
+  
+  let canMoveX = true;
+  let canMoveY = true;
+  
+  for (const ob of obstacles) {
+    const testRect = {x: newX, y: player.y, w: player.w, h: player.h};
+    if (rectOverlap(testRect, ob)) {
+      canMoveX = false;
+      
+      // Урон от опасностей
+      if (ob.hazard && player.invulnerable <= 0) {
+        hunger -= ob.damage;
+        player.invulnerable = 0.5;
+      }
+      break;
+    }
+  }
+  
+  for (const ob of obstacles) {
+    const testRect = {x: player.x, y: newY, w: player.w, h: player.h};
+    if (rectOverlap(testRect, ob)) {
+      canMoveY = false;
+      
+      if (ob.hazard && player.invulnerable <= 0) {
+        hunger -= ob.damage;
+        player.invulnerable = 0.5;
+      }
+      break;
+    }
+  }
+  
+  if (canMoveX) player.x = newX;
+  if (canMoveY) player.y = newY;
+  
+  // Границы мира
+  player.x = Math.max(0, Math.min(WORLD_W - player.w, player.x));
+  player.y = Math.max(0, Math.min(WORLD_H - player.h, player.y));
+  
+  // Голод и время
+  spawnAcc += dt;
+  if (spawnAcc > 4) {
+    spawnAcc = 0;
+    if (Math.random() < 0.4 && foods.length < 15 + selectedLevel) {
+      foods.push({
+        x: 50 + Math.random() * (WORLD_W - 100),
+        y: 50 + Math.random() * (WORLD_H - 100),
+        w: 16, h: 16,
+        type: 'exe',
+        value: 15
+      });
+    }
+  }
+  
+  hunger -= dt * (0.5 + selectedLevel * 0.05);
+  if (hunger <= 0) {
+    hunger = 0;
+    gameOver(false);
+  }
+  
+  timerLeft -= dt;
+  if (timerLeft <= 0) {
+    timerLeft = 0;
+    gameOver(true);
+  }
+  
+  // Подбор еды
+  for (let i = foods.length - 1; i >= 0; i--) {
+    const f = foods[i];
+    if (rectOverlap(player, f)) {
+      foods.splice(i, 1);
+      hunger = Math.min(100, hunger + f.value);
+    }
+  }
+  
+  // ИИ врага
+  const distToPlayer = Math.hypot(player.x - enemy.x, player.y - enemy.y);
+  
+  if (distToPlayer < 400 || enemy.aggro) {
+    // Преследование
+    enemy.lastSeen = {x: player.x, y: player.y};
+    let vx = player.x - enemy.x;
+    let vy = player.y - enemy.y;
+    const d = Math.hypot(vx, vy) || 1;
+    vx /= d;
+    vy /= d;
+    
+    enemy.x += vx * enemy.spd * dt;
+    enemy.y += vy * enemy.spd * dt;
+    
+    // Коллизии врага со стенами
+    for (const ob of obstacles) {
+      if (rectOverlap(enemy, ob) && !ob.hazard) {
+        // Отталкиваем от стены
+        const overlapX = Math.min(
+          enemy.x + enemy.w - ob.x,
+          ob.x + ob.w - enemy.x
+        );
+        const overlapY = Math.min(
+          enemy.y + enemy.h - ob.y,
+          ob.y + ob.h - enemy.y
+        );
+        
+        if (overlapX < overlapY) {
+          enemy.x -= vx * enemy.spd * dt * 2;
+        } else {
+          enemy.y -= vy * enemy.spd * dt * 2;
+        }
+      }
+    }
+  } else {
+    // Патрулирование
+    if (enemy.patrolPoints.length > 0) {
+      const target = enemy.patrolPoints[0];
+      let vx = target.x - enemy.x;
+      let vy = target.y - enemy.y;
+      const d = Math.hypot(vx, vy);
+      
+      if (d < 50) {
+        // Достигли точки, переходим к следующей
+        enemy.patrolPoints.push(enemy.patrolPoints.shift());
+      } else {
+        vx /= d;
+        vy /= d;
+        enemy.x += vx * enemy.spd * 0.7 * dt;
+        enemy.y += vy * enemy.spd * 0.7 * dt;
+      }
+    }
+  }
+  
+  // Коллизия с врагом
+  if (rectOverlap(player, enemy) && player.invulnerable <= 0) {
+    hunger -= 30;
+    player.invulnerable = 1;
+    
+    // Отталкивание
+    const dx = player.x - enemy.x;
+    const dy = player.y - enemy.y;
+    const pushDist = 50;
+    player.x += dx > 0 ? pushDist : -pushDist;
+    player.y += dy > 0 ? pushDist : -pushDist;
+    
+    if (hunger <= 0) gameOver(false);
+  }
+}
+
+function rectOverlap(a, b) {
+  return !(a.x + a.w < b.x || a.x > b.x + b.w || a.y + a.h < b.y || a.y > b.y + b.h);
+}
+
+// ======================
+// РЕНДЕРИНГ
+// ======================
+
+function drawSpriteTo(ctx, x, y, scale, palette) {
+  for (let yy = 0; yy < SPR_H; yy++) {
+    for (let xx = 0; xx < SPR_W; xx++) {
+      const v = spriteRows[yy][xx];
+      const col = palette[v];
+      if (!col) continue;
+      ctx.fillStyle = col;
+      ctx.fillRect(x + xx * scale, y + yy * scale, scale, scale);
+    }
+  }
+}
+
+function render() {
+  if (!currentWorld) return;
+  
+  const camW = canvas.width;
+  const camH = canvas.height;
+  const camX = Math.max(0, Math.min(WORLD_W - camW, player.x + player.w/2 - camW/2));
+  const camY = Math.max(0, Math.min(WORLD_H - camH, player.y + player.h/2 - camH/2));
+  
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  // Фон
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  // Сетка серверной
+  ctx.save();
+  ctx.translate(-camX, -camY);
+  
+  // Пол
+  ctx.fillStyle = '#001a00';
+  ctx.fillRect(0, 0, WORLD_W, WORLD_H);
+  
+  // Сетка пола
+  ctx.strokeStyle = '#003300';
+  ctx.lineWidth = 1;
+  for (let x = 0; x < WORLD_W; x += 80) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, WORLD_H);
+    ctx.stroke();
+  }
+  for (let y = 0; y < WORLD_H; y += 80) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(WORLD_W, y);
+    ctx.stroke();
+  }
+  
+  // Стены
+  ctx.fillStyle = '#002200';
+  for (const wall of currentWorld.walls) {
+    ctx.fillRect(wall.x, wall.y, wall.w, wall.h);
+    
+    // Текстура стен
+    ctx.fillStyle = '#001100';
+    for (let i = 0; i < wall.w; i += 8) {
+      for (let j = 0; j < wall.h; j += 8) {
+        if ((i + j) % 16 === 0) {
+          ctx.fillRect(wall.x + i, wall.y + j, 4, 4);
+        }
+      }
+    }
+    ctx.fillStyle = '#002200';
+  }
+  
+  // Серверные стойки
+  for (const server of currentWorld.servers) {
+    ctx.fillStyle = server.active ? '#003300' : '#001100';
+    ctx.fillRect(server.x, server.y, server.w, server.h);
+    
+    // Светодиоды
+    ctx.fillStyle = server.active ? '#0f0' : '#300';
+    for (let i = 0; i < 6; i++) {
+      ctx.fillRect(server.x + 10, server.y + 20 + i * 20, 8, 8);
+      ctx.fillRect(server.x + server.w - 18, server.y + 20 + i * 20, 8, 8);
+    }
+  }
+  
+  // Кабели
+  ctx.strokeStyle = '#0a0';
+  ctx.lineWidth = 3;
+  for (const cable of currentWorld.cables) {
+    ctx.beginPath();
+    if (cable.horizontal) {
+      ctx.moveTo(cable.x, cable.y);
+      ctx.lineTo(cable.x + cable.length, cable.y);
+    } else {
+      ctx.moveTo(cable.x, cable.y);
+      ctx.lineTo(cable.x, cable.y + cable.length);
+    }
+    ctx.stroke();
+  }
+  
+  // Опасности
+  for (const hazard of currentWorld.hazards) {
+    ctx.fillStyle = hazard.type === 'spark' ? '#ff9900' :
+                   hazard.type === 'smoke' ? '#666' : '#0f0';
+    ctx.globalAlpha = 0.6;
+    ctx.fillRect(hazard.x, hazard.y, hazard.w, hazard.h);
+    
+    // Анимация опасности
+    if (hazard.type === 'spark') {
+      ctx.fillStyle = '#ff0000';
+      for (let i = 0; i < 3; i++) {
+        const sparkX = hazard.x + Math.random() * hazard.w;
+        const sparkY = hazard.y + Math.random() * hazard.h;
+        ctx.fillRect(sparkX, sparkY, 4, 4);
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+  
+  // EXE файлы (еда)
+  for (const food of foods) {
+    ctx.fillStyle = '#ff0000';
+    ctx.fillRect(food.x, food.y, food.w, food.h);
+    ctx.fillStyle = '#fff';
+    ctx.font = '10px monospace';
+    ctx.fillText('EXE', food.x + 3, food.y + 12);
+  }
+  
+  // Враг
+  drawSpriteTo(ctx, enemy.x, enemy.y, SPRITE_SCALE, palEnemy);
+  
+  // Глитч-эффект для врага на поздних уровнях
+  if (selectedLevel > 7 && Math.random() < 0.1) {
+    ctx.globalAlpha = 0.7;
+    ctx.drawImage(ctx.canvas, 
+      enemy.x - camX + (Math.random() * 10 - 5),
+      enemy.y - camY + (Math.random() * 10 - 5));
+    ctx.globalAlpha = 1;
+  }
+  
+  // Игрок (с эффектом неуязвимости)
+  if (player.invulnerable <= 0 || Math.floor(Date.now() / 100) % 2 === 0) {
+    drawSpriteTo(ctx, player.x, player.y, SPRITE_SCALE, palPlayer);
+  }
+  
+  // Эффект глитча на высоких уровнях
+  if (selectedLevel > 6 && glitchEffect > 2) {
+    if (Math.random() < 0.05) {
+      ctx.fillStyle = '#ff0000';
+      ctx.globalAlpha = 0.1;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.globalAlpha = 1;
+    }
+  }
+  
+  ctx.restore();
+  
+  // Эффект статики по краям
+  ctx.strokeStyle = '#0f0';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(2, 2, canvas.width - 4, canvas.height - 4);
+  
+  // Миникарта
+  drawMinimap(camX, camY);
+  
+  // Обновление HUD
+  document.getElementById('hungerFill').style.width = Math.max(0, hunger) + '%';
+  document.getElementById('staminaFill').style.width = Math.max(0, stamina) + '%';
+  document.getElementById('hungerPercent').textContent = Math.floor(hunger) + '%';
+  document.getElementById('staminaPercent').textContent = Math.floor(stamina) + '%';
+  document.getElementById('timeLeft').textContent = formatTime(timerLeft);
+  document.getElementById('levelLabel').textContent = selectedLevel.toString().padStart(2, '0');
+}
+
+function drawMinimap(camX, camY) {
+  const mapSize = 80;
+  const mapX = canvas.width - mapSize - 10;
+  const mapY = 10;
+  
+  // Фон миникарты
+  ctx.fillStyle = '#000';
+  ctx.fillRect(mapX, mapY, mapSize, mapSize);
+  ctx.strokeStyle = '#0f0';
+  ctx.strokeRect(mapX, mapY, mapSize, mapSize);
+  
+  // Масштаб
+  const scale = mapSize / WORLD_W;
+  
+  // Стены
+  ctx.fillStyle = '#0a0';
+  for (const wall of currentWorld.walls) {
+    ctx.fillRect(
+      mapX + wall.x * scale,
+      mapY + wall.y * scale,
+      Math.max(1, wall.w * scale),
+      Math.max(1, wall.h * scale)
+    );
+  }
+  
+  // Игрок
+  ctx.fillStyle = player.invulnerable > 0 ? '#ff9900' : '#00ff00';
+  ctx.fillRect(
+    mapX + player.x * scale - 2,
+    mapY + player.y * scale - 2,
+    4, 4
+  );
+  
+  // Враг
+  ctx.fillStyle = '#ff0000';
+  ctx.fillRect(
+    mapX + enemy.x * scale - 2,
+    mapY + enemy.y * scale - 2,
+    4, 4
+  );
+  
+  // EXE файлы
+  ctx.fillStyle = '#ff6666';
+  for (const food of foods) {
+    ctx.fillRect(
+      mapX + food.x * scale,
+      mapY + food.y * scale,
+      2, 2
+    );
+  }
+  
+  // Область камеры
+  ctx.strokeStyle = '#fff';
+  ctx.strokeRect(
+    mapX + camX * scale,
+    mapY + camY * scale,
+    canvas.width * scale,
+    canvas.height * scale
+  );
+}
+
+function formatTime(s) {
+  const mm = Math.floor(s / 60);
+  const ss = Math.floor(s % 60);
+  return `${mm.toString().padStart(2, '0')}:${ss.toString().padStart(2, '0')}`;
+}
+
+// ======================
+// ГЛАВНЫЙ ЦИКЛ
+// ======================
+
+function loop(ts) {
+  if (!lastTime) lastTime = ts;
+  const dt = Math.min(0.05, (ts - lastTime) / 1000);
+  lastTime = ts;
+  
+  update(dt);
+  render();
+  
+  requestAnimationFrame(loop);
+}
+
+// ======================
+// МЕНЮ И ИНТЕРФЕЙС
+// ======================
+
+// Кнопки уровней
+const lvlContainer = document.getElementById('levelSelect');
+for (let i = 1; i <= 10; i++) {
+  const cfg = serverConfigs[i-1];
+  const b = document.createElement('button');
+  b.className = 'level-btn';
+  b.innerHTML = `<span class="server-icon ${i === 1 ? 'blink' : ''}"></span> ${cfg.name}`;
+  b.style.fontSize = '11px';
+  b.style.padding = '8px 4px';
+  
+  b.addEventListener('click', () => {
+    selectedLevel = i;
+    Array.from(lvlContainer.children).forEach(ch => {
+      ch.style.border = '1px solid #0a0';
+      ch.querySelector('.server-icon').classList.remove('blink');
+    });
+    b.style.border = '2px solid #ff0000';
+    b.querySelector('.server-icon').classList.add('blink');
+    
+    // Обновляем описание
+    document.getElementById('levelDesc').textContent = cfg.desc;
+    document.getElementById('threatLevel').textContent = 
+      threatLevels[Math.min(i-1, threatLevels.length-1)];
+    document.getElementById('threatLevel').style.color = 
+      ['#0f0', '#ff9900', '#ff6600', '#ff0000'][Math.min(i-1, 3)];
+  });
+  
+  if (i === 1) {
+    b.style.border = '2px solid #ff0000';
+  }
+  
+  lvlContainer.appendChild(b);
+}
+
+// Старт игры
+document.getElementById('startBtn').addEventListener('click', () => {
+  initLevel(selectedLevel);
+  document.getElementById('menuBox').style.display = 'none';
+  document.getElementById('ui').style.display = 'flex';
+  canvas.style.display = 'block';
+  gameState = 'playing';
+  lastTime = performance.now();
+  hideOverlay();
+});
+
+// Тигры
+document.getElementById('creditsBtn').addEventListener('click', showCredits);
+
+function showCredits() {
+  gameState = 'credits';
+  document.getElementById('menuBox').style.display = 'none';
+  overlay.style.display = 'flex';
+  overlay.innerHTML = `
+    <div style="background:#000;padding:20px;border:2px solid #0a0;color:#0f0;max-width:600px;font-family:monospace;box-shadow:0 0 30px #0f0;">
+      <div style="color:#ff0000;font-size:24px;text-align:center;margin-bottom:20px;">SYSTEM CREDITS</div>
+      <div style="font-size:14px;line-height:1.6;">
+        <div>> TERMINAL: CAT.EXE [CORRUPTED PROCESS]</div>
+        <div>> VERSION: 8-BIT HORROR EDITION</div>
+        <br>
+        <div>> SERVER ARCHITECT: PUSHOK.EXE</div>
+        <div>> CODE PROCESSOR: CHATGPT.DLL</div>
+        <div>> HORROR PROTOCOLS: PUSHOK.SYS</div>
+        <div>> AUDIO FEEDBACK: PUSHOK.WAV</div>
+        <div>> DISTORTION ENGINE: SUNO.EXE</div>
+        <br>
+        <div>> MEMORY ALLOCATED: ${Math.random().toString(16).slice(2, 10)}</div>
+        <div>> SYSTEM TIME: ${new Date().toLocaleTimeString()}</div>
+        <div>> THREAT LEVEL: <span style="color:#ff0000">CRITICAL</span></div>
+        <br>
+        <div style="color:#666;text-align:center;margin-top:20px;">
+          [ Press any key to return to terminal ]
+        </div>
+      </div>
+    </div>
+  `;
+  
+  window.addEventListener('keydown', creditsKey);
+}
+
+function creditsKey() {
+  window.removeEventListener('keydown', creditsKey);
+  overlay.style.display = 'none';
+  showMenu();
+}
+
+// Катсцена финального уровня
+function playCutscene() {
+  gameState = 'cutscene';
+  document.getElementById('menuBox').style.display = 'none';
+  overlay.style.display = 'none';
+  
+  // Специальный мир для катсцены
+  currentWorld = generateWorld(0.999);
+  player.x = 100;
+  player.y = WORLD_H / 2;
+  enemy.x = WORLD_W - 200;
+  enemy.y = WORLD_H / 2;
+  
+  let t = 0;
+  const duration = 8;
+  const messages = [
+    "> FINAL CONTAINMENT PROTOCOL INITIATED",
+    "> CAT.EXE ORIGIN DETECTED",
+    "> REALITY CORRUPTION AT 97%",
+    "> MEMORY FRAGMENTATION DETECTED",
+    "> INITIATING SYSTEM PURGE",
+    "> GOODBYE"
+  ];
+  let msgIndex = 0;
+  
+  function cs(ts) {
+    if (!lastTime) lastTime = ts;
+    const dt = Math.min(0.05, (ts - lastTime) / 1000);
+    lastTime = ts;
+    t += dt;
+    
+    // Движение в катсцене
+    if (t < 6) {
+      player.x += 180 * dt;
+      enemy.x += 160 * dt;
+      
+      // Враг становится ближе
+      if (t > 3) {
+        enemy.x -= 80 * dt;
+      }
+      
+      // Смена сообщений
+      if (t > msgIndex * (duration / messages.length)) {
+        showCutsceneMessage(messages[msgIndex]);
+        msgIndex++;
+      }
+    }
+    
+    // Рендер с эффектами
+    render();
+    
+    // Спецэффекты для катсцены
+    ctx.fillStyle = `rgba(255, 0, 0, ${0.1 + Math.sin(t * 5) * 0.1})`;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    if (t < duration) {
+      requestAnimationFrame(cs);
+    } else {
+      showFinalTitles();
+    }
+  }
+  
+  function showCutsceneMessage(text) {
+    const msg = document.createElement('div');
+    msg.style.position = 'absolute';
+    msg.style.bottom = '50px';
+    msg.style.left = '50%';
+    msg.style.transform = 'translateX(-50%)';
+    msg.style.background = '#000';
+    msg.style.border = '2px solid #ff0000';
+    msg.style.color = '#ff0000';
+    msg.style.padding = '10px 20px';
+    msg.style.fontFamily = 'monospace';
+    msg.style.fontSize = '14px';
+    msg.style.textAlign = 'center';
+    msg.style.zIndex = '10000';
+    msg.textContent = text;
+    document.body.appendChild(msg);
+    
+    setTimeout(() => {
+      if (msg.parentNode) {
+        msg.parentNode.removeChild(msg);
+      }
+    }, 2000);
+  }
+  
+  cs(performance.now());
+}
+
+function showFinalTitles() {
+  overlay.style.display = 'flex';
+  overlay.innerHTML = `
+    <div style="background:#000;color:#0f0;padding:30px;border:2px solid #0a0;text-align:center;max-width:700px;font-family:monospace;box-shadow:0 0 40px #0f0;">
+      <div style="color:#ff0000;font-size:36px;margin-bottom:20px;text-shadow:0 0 20px #f00;">CAT.EXE</div>
+      <div style="font-size:16px;line-height:1.8;margin-bottom:30px;">
+        > PROCESS CONTAINED<br>
+        > SYSTEM REBOOTING<br>
+        > MEMORY RESTORED<br>
+        > THREAT NEUTRALIZED
+      </div>
+      <div style="border-top:1px solid #0a0;padding-top:20px;color:#666;font-size:14px;">
+        SERVER ARCHITECT: PUSHOK.EXE<br>
+        CODE PROCESSOR: CHATGPT.DLL<br>
+        HORROR PROTOCOLS: PUSHOK.SYS<br>
+        AUDIO CORRUPTION: SUNO.EXE
+      </div>
+      <div style="margin-top:30px;color:#0a0;font-size:12px;">
+        [ Press any key to return to terminal ]
+      </div>
+    </div>
+  `;
+  
+  window.addEventListener('keydown', finalKey);
+}
+
+function finalKey() {
+  window.removeEventListener('keydown', finalKey);
+  overlay.style.display = 'none';
+  showMenu();
+}
+
+// ======================
+// ИНИЦИАЛИЗАЦИЯ
+// ======================
+
+// Начальная инициализация
+initLevel(1);
+requestAnimationFrame(loop);
+
+// Показываем меню при загрузке
+showMenu();
+
+// Консольные сообщения при загрузке
+console.log('%c CAT.EXE — 8-BIT HORROR ', 'background: #000; color: #0f0; font-size: 20px; padding: 10px;');
+console.log('%c WARNING: Corrupted process detected in memory ', 'background: #000; color: #ff0000;');
+console.log('%c > Type "showMenu()" to access system terminal ', 'color: #0a0;');
+</script>
+</body>
+</html>

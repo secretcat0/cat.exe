@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYSTEM TERMINAL — CAT.EXE ACCESS</title>
+    <style>
+        :root {
+            background: #000;
+            color: #0f0;
+            font-family: 'Courier New', monospace;
+            image-rendering: pixelated;
+        }
+        
+        body {
+            margin: 0;
+            background: 
+                radial-gradient(circle at 20% 30%, #001100 0%, #000 70%),
+                repeating-linear-gradient(0deg, transparent, transparent 2px, #001a00 2px, #001a00 4px);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow: hidden;
+        }
+        
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                to bottom,
+                transparent 50%,
+                rgba(0, 255, 0, 0.03) 50%
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 9999;
+        }
+        
+        .static {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" opacity="0.02"><filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3"/></filter><rect width="100" height="100" filter="url(%23noise)"/></svg>');
+            pointer-events: none;
+            z-index: 9998;
+        }
+        
+        .glitch-text {
+            position: relative;
+            font-size: 48px;
+            font-weight: bold;
+            color: #0f0;
+            text-shadow: 0 0 10px #0f0;
+            margin-bottom: 20px;
+            letter-spacing: 3px;
+        }
+        
+        .glitch-text::before,
+        .glitch-text::after {
+            content: "SYSTEM TERMINAL";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .glitch-text::before {
+            animation: glitch-1 2s infinite linear alternate-reverse;
+            color: #f00;
+            z-index: -1;
+        }
+        
+        .glitch-text::after {
+            animation: glitch-2 3s infinite linear alternate-reverse;
+            color: #00f;
+            z-index: -2;
+        }
+        
+        @keyframes glitch-1 {
+            0% { transform: translate(0); }
+            10% { transform: translate(-2px, 2px); }
+            20% { transform: translate(2px, -2px); }
+            30% { transform: translate(-1px, 1px); }
+            40% { transform: translate(1px, -1px); }
+            50% { transform: translate(0); }
+            100% { transform: translate(0); }
+        }
+        
+        @keyframes glitch-2 {
+            0% { transform: translate(0); }
+            15% { transform: translate(3px, -3px); }
+            25% { transform: translate(-3px, 3px); }
+            35% { transform: translate(2px, -2px); }
+            45% { transform: translate(-2px, 2px); }
+            55% { transform: translate(0); }
+            100% { transform: translate(0); }
+        }
+        
+        .terminal {
+            background: rgba(0, 20, 0, 0.9);
+            border: 2px solid #0a0;
+            border-radius: 4px;
+            padding: 30px;
+            width: 90%;
+            max-width: 800px;
+            box-shadow: 
+                0 0 30px #0f0,
+                inset 0 0 20px rgba(0, 255, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .terminal::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #f00, #0f0, #00f);
+            animation: rgb-line 3s infinite linear;
+        }
+        
+        @keyframes rgb-line {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+        
+        .prompt {
+            color: #0f0;
+            margin-bottom: 20px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .prompt-line {
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 16px;
+            background: #0f0;
+            margin-left: 5px;
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        .server-icon {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            background: #0f0;
+            margin: 0 8px;
+            box-shadow: 0 0 8px #0f0;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .file-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 30px 0;
+        }
+        
+        .file-item {
+            background: rgba(0, 30, 0, 0.5);
+            border: 1px solid #0a0;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            text-decoration: none;
+            display: block;
+            color: inherit;
+        }
+        
+        .file-item:hover {
+            background: rgba(0, 50, 0, 0.7);
+            border-color: #0f0;
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px #0f0;
+        }
+        
+        .file-item.critical:hover {
+            border-color: #f00;
+            box-shadow: 0 0 15px #f00;
+            animation: shake 0.5s infinite;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-2px); }
+            75% { transform: translateX(2px); }
+        }
+        
+        .file-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        
+        .file-name {
+            font-size: 12px;
+            color: #0f0;
+            font-weight: bold;
+        }
+        
+        .file-size {
+            font-size: 10px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 1px solid #0a0;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .warning {
+            color: #f00;
+            animation: warning-blink 1s infinite;
+        }
+        
+        @keyframes warning-blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.5; }
+        }
+        
+        .system-info {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            font-size: 10px;
+            color: #333;
+        }
+        
+        .matrix-effect {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            opacity: 0.1;
+        }
+        
+        .matrix-char {
+            position: absolute;
+            color: #0f0;
+            font-size: 14px;
+            animation: fall linear infinite;
+        }
+        
+        @keyframes fall {
+            to { transform: translateY(100vh); }
+        }
+        
+        .access-code {
+            display: inline-block;
+            background: #000;
+            border: 1px solid #0a0;
+            padding: 5px 10px;
+            margin: 0 5px;
+            font-family: monospace;
+            letter-spacing: 2px;
+        }
+        
+        .typewriter {
+            overflow: hidden;
+            border-right: 2px solid #0f0;
+            white-space: nowrap;
+            animation: typing 3.5s steps(40, end), blink-caret 0.75s step-end infinite;
+        }
+        
+        @keyframes typing {
+            from { width: 0 }
+            to { width: 100% }
+        }
+        
+        @keyframes blink-caret {
+            from, to { border-color: transparent }
+            50% { border-color: #0f0 }
+        }
+        
+        @media (max-width: 768px) {
+            .glitch-text {
+                font-size: 32px;
+            }
+            
+            .terminal {
+                padding: 20px;
+            }
+            
+            .file-list {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .glitch-text {
+                font-size: 24px;
+            }
+            
+            .file-list {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="scanlines"></div>
+    <div class="static"></div>
+    
+    <div class="glitch-text">SYSTEM TERMINAL</div>
+    
+    <div class="terminal">
+        <div class="prompt">
+            <div class="prompt-line">
+                <span class="server-icon"></span>
+                > SYSTEM BOOT COMPLETE
+            </div>
+            
+            <div class="prompt-line">
+                <span class="server-icon"></span>
+                > WELCOME TO SERVER FARM ALPHA
+            </div>
+            
+            <div class="prompt-line">
+                <span class="server-icon"></span>
+                > ACCESS LEVEL: <span class="warning">RESTRICTED</span>
+            </div>
+            
+            <div class="prompt-line typewriter">
+                > WARNING: CORRUPTED PROCESS DETECTED IN MEMORY
+            </div>
+            
+            <div class="prompt-line">
+                <span class="server-icon"></span>
+                > PROCESS ID: <span class="warning">CAT.EXE</span> [STATUS: HOSTILE]
+            </div>
+            
+            <div class="prompt-line">
+                <span class="server-icon"></span>
+                > LAST ACCESS: <span id="currentTime">--:--:--</span>
+            </div>
+        </div>
+        
+        <div class="file-list" id="fileList">
+            <!-- Files will be generated here -->
+        </div>
+        
+        <div class="status-bar">
+            <div>
+                <span class="server-icon"></span>
+                SERVER: <span class="access-code">ALPHA-01</span>
+            </div>
+            <div>
+                USERS: <span class="access-code">01</span>
+            </div>
+            <div class="warning">
+                <span class="server-icon"></span>
+                THREAT LEVEL: <span class="access-code">HIGH</span>
+            </div>
+        </div>
+        
+        <div class="system-info">
+            v1.0.3 | PUSHOK SYSTEMS
+        </div>
+    </div>
+    
+    <script>
+        // Matrix эффект на заднем плане
+        function createMatrixEffect() {
+            const chars = "01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン";
+            const container = document.createElement('div');
+            container.className = 'matrix-effect';
+            document.body.appendChild(container);
+            
+            function createChar() {
+                const char = document.createElement('div');
+                char.className = 'matrix-char';
+                char.textContent = chars[Math.floor(Math.random() * chars.length)];
+                char.style.left = Math.random() * 100 + 'vw';
+                char.style.animationDuration = (3 + Math.random() * 5) + 's';
+                char.style.animationDelay = Math.random() * 2 + 's';
+                char.style.opacity = Math.random() * 0.5 + 0.1;
+                
+                container.appendChild(char);
+                
+                setTimeout(() => {
+                    char.remove();
+                }, parseFloat(char.style.animationDuration) * 1000);
+            }
+            
+            // Создаем несколько символов
+            for (let i = 0; i < 50; i++) {
+                setTimeout(createChar, i * 100);
+            }
+            
+            // Продолжаем создавать символы
+            setInterval(() => {
+                if (Math.random() > 0.7) {
+                    createChar();
+                }
+            }, 100);
+        }
+        
+        // Обновление времени
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('ru-RU', { 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit' 
+            });
+            document.getElementById('currentTime').textContent = timeString;
+        }
+        
+        // Создание списка файлов
+        function createFileList() {
+            const files = [
+                { 
+                    name: 'SYSTEM_LOG.txt', 
+                    size: '2.4 MB', 
+                    icon: '📄', 
+                    normal: true,
+                    action: 'download',
+                    url: 'downloadexe/SYSTEM_LOG.txt',
+                    filename: 'system_log.txt'
+                },
+                { 
+                    name: 'SERVER_CONFIG.exe', 
+                    size: '8.1 MB', 
+                    icon: '⚙️', 
+                    normal: true,
+                    action: 'none'
+                },
+                { 
+                    name: 'NETWORK_MAP.png', 
+                    size: '4.7 MB', 
+                    icon: '🗺️', 
+                    normal: true,
+                    action: 'download',
+                    url: 'downloadexe/NETWORK_MAP.png',
+                    filename: 'network_map.png'
+                },
+                { 
+                    name: 'BACKUP_001.zip', 
+                    size: '156 MB', 
+                    icon: '💾', 
+                    normal: true,
+                    action: 'download',
+                    url: 'downloadexe/BACKUP_001.zip',
+                    filename: 'backup_001.zip'
+                },
+                { 
+                    name: 'SECURITY_PROTOCOLS.md', 
+                    size: '1.2 MB', 
+                    icon: '🔒', 
+                    normal: true,
+                    action: 'open',
+                    url: 'SECURITY_PROTOCOLS.md.html'
+                },
+                { 
+                    name: 'CAT.EXE', 
+                    size: '???', 
+                    icon: '🐱', 
+                    critical: true, 
+                    action: 'launchGame',
+                    url: 'cat.exe.html'
+                },
+                { 
+                    name: 'MEMORY_DUMP.bin', 
+                    size: '89 MB', 
+                    icon: '🧠', 
+                    normal: true,
+                    action: 'open',
+                    url: 'MEMORY_DUMP.bin.html'
+                },
+                { 
+                    name: 'QUARANTINE_FOLDER', 
+                    size: 'ACCESS DENIED', 
+                    icon: '🚫', 
+                    normal: true,
+                    action: 'open',
+                    url: 'No_Access.html'
+                }
+            ];
+            
+            const fileList = document.getElementById('fileList');
+            
+            files.forEach(file => {
+                const fileItem = document.createElement(file.action === 'none' ? 'div' : 'a');
+                fileItem.className = `file-item ${file.critical ? 'critical' : ''}`;
+                
+                if (file.action === 'download') {
+                    fileItem.href = file.url;
+                    fileItem.download = file.filename;
+                    fileItem.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        showDownloadPrompt(file.name, file.url);
+                    });
+                } else if (file.action === 'open') {
+                    fileItem.href = file.url;
+                    fileItem.target = '_blank';
+                } else if (file.action === 'launchGame') {
+                    fileItem.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        launchGame();
+                    });
+                }
+                
+                fileItem.innerHTML = `
+                    <div class="file-icon">${file.icon}</div>
+                    <div class="file-name">${file.name}</div>
+                    <div class="file-size">${file.size}</div>
+                `;
+                
+                fileList.appendChild(fileItem);
+            });
+        }
+        
+        // Показать промпт скачивания
+        function showDownloadPrompt(filename, url) {
+            const prompt = document.createElement('div');
+            prompt.style.position = 'fixed';
+            prompt.style.top = '50%';
+            prompt.style.left = '50%';
+            prompt.style.transform = 'translate(-50%, -50%)';
+            prompt.style.background = '#000';
+            prompt.style.border = '2px solid #0f0';
+            prompt.style.color = '#0f0';
+            prompt.style.padding = '20px';
+            prompt.style.fontFamily = 'monospace';
+            prompt.style.zIndex = '10000';
+            prompt.style.textAlign = 'center';
+            prompt.style.minWidth = '300px';
+            prompt.innerHTML = `
+                <div style="margin-bottom: 15px;">DOWNLOAD CONFIRMATION</div>
+                <div style="margin: 10px 0;">File: <span style="color:#fff">${filename}</span></div>
+                <div style="margin: 10px 0; color: #666;">Proceed with download?</div>
+                <div style="display: flex; justify-content: center; gap: 20px; margin-top: 20px;">
+                    <button id="confirmDownload" style="
+                        background: #0a0;
+                        border: 1px solid #0f0;
+                        color: #000;
+                        padding: 8px 16px;
+                        font-family: monospace;
+                        cursor: pointer;
+                    ">CONFIRM</button>
+                    <button id="cancelDownload" style="
+                        background: #300;
+                        border: 1px solid #f00;
+                        color: #fff;
+                        padding: 8px 16px;
+                        font-family: monospace;
+                        cursor: pointer;
+                    ">CANCEL</button>
+                </div>
+            `;
+            
+            document.body.appendChild(prompt);
+            
+            document.getElementById('confirmDownload').addEventListener('click', () => {
+                // Создаем временную ссылку для скачивания
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = filename.toLowerCase().replace(/ /g, '_');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                document.body.removeChild(prompt);
+            });
+            
+            document.getElementById('cancelDownload').addEventListener('click', () => {
+                document.body.removeChild(prompt);
+            });
+        }
+        
+        // Запуск игры
+        function launchGame() {
+            // Эффект перехода
+            document.body.style.animation = 'fadeOut 0.5s forwards';
+            
+            // Показываем предупреждение
+            const warning = document.createElement('div');
+            warning.style.position = 'fixed';
+            warning.style.top = '50%';
+            warning.style.left = '50%';
+            warning.style.transform = 'translate(-50%, -50%)';
+            warning.style.background = '#000';
+            warning.style.border = '2px solid #f00';
+            warning.style.color = '#f00';
+            warning.style.padding = '20px';
+            warning.style.fontFamily = 'monospace';
+            warning.style.zIndex = '10000';
+            warning.style.textAlign = 'center';
+            warning.innerHTML = `
+                <div style="margin-bottom: 15px;">⚠️ WARNING ⚠️</div>
+                <div>EXECUTING CORRUPTED PROCESS: CAT.EXE</div>
+                <div style="margin: 10px 0; color: #0f0;">> MEMORY INTEGRITY AT RISK</div>
+                <div style="font-size: 12px; color: #666;" id="countdown">Initializing in 3 seconds...</div>
+            `;
+            
+            document.body.appendChild(warning);
+            
+            // Отсчет
+            let count = 3;
+            const countdown = setInterval(() => {
+                document.getElementById('countdown').textContent = 
+                    `Initializing in ${count} seconds...`;
+                count--;
+                
+                if (count < 0) {
+                    clearInterval(countdown);
+                    // Запускаем игру
+                    window.location.href = 'cat.exe.html';
+                }
+            }, 1000);
+        }
+        
+        // Создаем эффект набора текста для случайных строк
+        function createTypewriterEffects() {
+            const lines = document.querySelectorAll('.prompt-line');
+            lines.forEach((line, index) => {
+                const text = line.textContent;
+                line.textContent = '';
+                
+                setTimeout(() => {
+                    let i = 0;
+                    const type = setInterval(() => {
+                        line.textContent += text[i];
+                        i++;
+                        if (i >= text.length) {
+                            clearInterval(type);
+                            // Добавляем курсор к последней строке
+                            if (index === lines.length - 1) {
+                                const cursor = document.createElement('span');
+                                cursor.className = 'cursor';
+                                line.appendChild(cursor);
+                            }
+                        }
+                    }, 30);
+                }, index * 500);
+            });
+        }
+        
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', () => {
+            createMatrixEffect();
+            updateTime();
+            setInterval(updateTime, 1000);
+            createFileList();
+            
+            // Запускаем эффект набора текста с задержкой
+            setTimeout(createTypewriterEffects, 1000);
+            
+            // Добавляем случайные системные сообщения
+            const messages = [
+                "> SCANNING FOR MALWARE...",
+                "> FIREWALL: ACTIVE",
+                "> ENCRYPTION: AES-256",
+                "> BACKUP SYSTEMS: ONLINE",
+                "> MEMORY USAGE: 78%",
+                "> NETWORK LATENCY: 24ms",
+                "> CAT.EXE PROCESS DETECTED",
+                "> QUARANTINE PROTOCOLS: ACTIVE"
+            ];
+            
+            setInterval(() => {
+                if (Math.random() > 0.7) {
+                    const prompt = document.querySelector('.prompt');
+                    const newLine = document.createElement('div');
+                    newLine.className = 'prompt-line';
+                    newLine.innerHTML = `<span class="server-icon"></span> ${messages[Math.floor(Math.random() * messages.length)]}`;
+                    prompt.appendChild(newLine);
+                    
+                    // Удаляем старые строки если их слишком много
+                    if (prompt.children.length > 15) {
+                        prompt.removeChild(prompt.children[2]);
+                    }
+                }
+            }, 5000);
+            
+            // Добавляем эффект мигания для критических файлов
+            setInterval(() => {
+                const criticalFiles = document.querySelectorAll('.file-item.critical');
+                criticalFiles.forEach(file => {
+                    file.style.boxShadow = file.style.boxShadow ? '' : '0 0 20px #f00';
+                });
+            }, 1000);
+            
+            // Секретная комбинация клавиш
+            let keySequence = [];
+            const konamiCode = [
+                'arrowup', 'arrowup', 
+                'arrowdown', 'arrowdown',
+                'arrowleft', 'arrowright',
+                'arrowleft', 'arrowright',
+                'b', 'a'
+            ];
+            
+            document.addEventListener('keydown', (e) => {
+                keySequence.push(e.key.toLowerCase());
+                if (keySequence.length > konamiCode.length) {
+                    keySequence.shift();
+                }
+                
+                if (keySequence.join(',') === konamiCode.join(',')) {
+                    // Активируем секретный режим
+                    document.body.style.animation = 'rgbFlash 1s';
+                    setTimeout(() => {
+                        const secretMsg = document.createElement('div');
+                        secretMsg.style.position = 'fixed';
+                        secretMsg.style.top = '50%';
+                        secretMsg.style.left = '50%';
+                        secretMsg.style.transform = 'translate(-50%, -50%)';
+                        secretMsg.style.background = '#000';
+                        secretMsg.style.border = '2px solid #0f0';
+                        secretMsg.style.color = '#0f0';
+                        secretMsg.style.padding = '20px';
+                        secretMsg.style.fontFamily = 'monospace';
+                        secretMsg.style.zIndex = '10001';
+                        secretMsg.style.textAlign = 'center';
+                        secretMsg.innerHTML = `
+                            <div>[SECRET MODE ACTIVATED]</div>
+                            <div style="margin: 10px 0; color: #fff;">> ALL FILES UNLOCKED</div>
+                            <div style="margin: 10px 0; color: #fff;">> ADMIN PRIVILEGES GRANTED</div>
+                            <div style="margin: 10px 0; color: #666;">> SYSTEM OVERRIDE COMPLETE</div>
+                            <div style="margin-top: 15px; color: #0a0;">ENJOY THE GAME!</div>
+                        `;
+                        document.body.appendChild(secretMsg);
+                        
+                        setTimeout(() => {
+                            document.body.removeChild(secretMsg);
+                        }, 3000);
+                    }, 500);
+                }
+            });
+            
+            // CSS анимации
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes fadeOut {
+                    to { opacity: 0; }
+                }
+                
+                @keyframes rgbFlash {
+                    0% { filter: hue-rotate(0deg); }
+                    25% { filter: hue-rotate(90deg); }
+                    50% { filter: hue-rotate(180deg); }
+                    75% { filter: hue-rotate(270deg); }
+                    100% { filter: hue-rotate(360deg); }
+                }
+            `;
+            document.head.appendChild(style);
+        });
+        
+        // Добавляем звуковые эффекты при наведении
+        document.addEventListener('mouseover', (e) => {
+            if (e.target.closest('.file-item.critical')) {
+                // Создаем звуковой контекст для бип-сигнала
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.value = 800;
+                    oscillator.type = 'sine';
+                    
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.1);
+                } catch (e) {
+                    console.log('Audio not supported');
+                }
+            }
+        });
+    </script>
+</body>
+</html>

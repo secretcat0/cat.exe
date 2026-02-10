@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACCESS DENIED</title>
+    <style>
+        :root {
+            background: #000;
+            color: #ff0000;
+            font-family: 'Courier New', monospace;
+            image-rendering: pixelated;
+        }
+        
+        body {
+            margin: 0;
+            background: 
+                radial-gradient(circle at 20% 30%, #330000 0%, #000 70%),
+                repeating-linear-gradient(0deg, transparent, transparent 2px, #330000 2px, #330000 4px);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                to bottom,
+                transparent 50%,
+                rgba(255, 0, 0, 0.05) 50%
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 9999;
+        }
+        
+        .static {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" opacity="0.05"><filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3"/></filter><rect width="100" height="100" filter="url(%23noise)"/></svg>');
+            pointer-events: none;
+            z-index: 9998;
+            animation: static-move 0.1s infinite;
+        }
+        
+        @keyframes static-move {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(10px, 10px); }
+        }
+        
+        .denied-box {
+            background: rgba(0, 0, 0, 0.9);
+            border: 3px solid #ff0000;
+            padding: 40px;
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: 
+                0 0 50px #ff0000,
+                inset 0 0 30px rgba(255, 0, 0, 0.2);
+            position: relative;
+            animation: shake 0.5s infinite;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+            20%, 40%, 60%, 80% { transform: translateX(2px); }
+        }
+        
+        .title {
+            font-size: 48px;
+            margin-bottom: 30px;
+            text-shadow: 0 0 20px #ff0000;
+            letter-spacing: 5px;
+            animation: glitch 3s infinite;
+        }
+        
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            2% { transform: translate(-3px, 2px); }
+            4% { transform: translate(3px, -2px); }
+            6% { transform: translate(-2px, 1px); }
+            8% { transform: translate(2px, -1px); }
+            10% { transform: translate(0); }
+            100% { transform: translate(0); }
+        }
+        
+        .message {
+            font-size: 18px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            color: #ff6666;
+        }
+        
+        .error-code {
+            background: #330000;
+            border: 1px solid #ff0000;
+            padding: 15px;
+            margin: 20px 0;
+            font-family: monospace;
+            font-size: 14px;
+            color: #fff;
+            text-align: left;
+        }
+        
+        .countdown {
+            font-size: 24px;
+            color: #fff;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        
+        .back-button {
+            display: inline-block;
+            padding: 15px 30px;
+            background: #330000;
+            border: 1px solid #ff0000;
+            color: #fff;
+            text-decoration: none;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 20px;
+        }
+        
+        .back-button:hover {
+            background: #660000;
+            box-shadow: 0 0 20px #ff0000;
+            transform: scale(1.05);
+        }
+        
+        .warning-triangle {
+            font-size: 60px;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .security-level {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .access-log {
+            margin-top: 30px;
+            padding: 15px;
+            background: rgba(255, 0, 0, 0.1);
+            border-top: 1px solid #ff0000;
+            font-size: 12px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="scanlines"></div>
+    <div class="static"></div>
+    
+    <div class="denied-box">
+        <div class="security-level">SECURITY LEVEL: MAXIMUM</div>
+        
+        <div class="warning-triangle">⚠️</div>
+        
+        <div class="title">ACCESS DENIED</div>
+        
+        <div class="message">
+            UNAUTHORIZED ACCESS ATTEMPT DETECTED<br>
+            QUARANTINE FOLDER IS UNDER RESTRICTED ACCESS
+        </div>
+        
+        <div class="error-code">
+            ERROR CODE: 0x7F_CAT_EXE<br>
+            TIMESTAMP: 2024-01-15 23:47:12<br>
+            USER: UNKNOWN [CAT.EXE PROCESS]<br>
+            IP ADDRESS: 127.0.0.1 [LOCALHOST]<br>
+            REASON: SECURITY BREACH IN PROGRESS
+        </div>
+        
+        <div class="countdown" id="countdown">
+            SYSTEM LOCKDOWN IN: <span id="timer">10</span> SECONDS
+        </div>
+        
+        <div class="access-log">
+            > [23:47:10] ACCESS ATTEMPT DETECTED<br>
+            > [23:47:11] USER AUTHENTICATION FAILED<br>
+            > [23:47:12] SECURITY PROTOCOLS ACTIVATED<br>
+            > [23:47:12] SYSTEM LOCKDOWN INITIATED<br>
+            > [23:47:12] CAT.EXE PROCESS DETECTED<br>
+            > [23:47:12] ALL ACCESS REVOKED
+        </div>
+        
+        <a href="index.html" class="back-button">RETURN TO TERMINAL</a>
+    </div>
+    
+    <script>
+        // Обратный отсчет
+        let countdown = 10;
+        const timerElement = document.getElementById('timer');
+        const countdownElement = document.getElementById('countdown');
+        
+        const countdownInterval = setInterval(() => {
+            countdown--;
+            timerElement.textContent = countdown;
+            
+            if (countdown <= 5) {
+                countdownElement.style.color = '#ff0000';
+                countdownElement.style.animation = 'pulse 0.5s infinite';
+            }
+            
+            if (countdown <= 0) {
+                clearInterval(countdownInterval);
+                simulateLockdown();
+            }
+        }, 1000);
+        
+        // Симуляция блокировки системы
+        function simulateLockdown() {
+            const deniedBox = document.querySelector('.denied-box');
+            
+            // Эффект мигания
+            let flashCount = 0;
+            const flashInterval = setInterval(() => {
+                deniedBox.style.boxShadow = flashCount % 2 === 0 
+                    ? '0 0 100px #ff0000' 
+                    : '0 0 50px #ff0000';
+                flashCount++;
+                
+                if (flashCount > 6) {
+                    clearInterval(flashInterval);
+                    showLockdownMessage();
+                }
+            }, 200);
+        }
+        
+        // Показать сообщение о блокировке
+        function showLockdownMessage() {
+            const message = document.querySelector('.message');
+            const originalMessage = message.textContent;
+            
+            message.innerHTML = `
+                SYSTEM LOCKDOWN COMPLETE<br>
+                ALL CONNECTIONS TERMINATED<br>
+                SECURITY PROTOCOLS: ACTIVE<br>
+                <span style="color:#fff; font-size:14px; margin-top:10px; display:block;">
+                    Return to terminal before full system wipe
+                </span>
+            `;
+            
+            // Добавляем дополнительные эффекты
+            document.body.style.animation = 'redPulse 1s infinite';
+            
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes redPulse {
+                    0%, 100% { background-color: #000; }
+                    50% { background-color: #330000; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        // Случайные эффекты глитча
+        function randomGlitchEffects() {
+            setInterval(() => {
+                if (Math.random() < 0.3) {
+                    const title = document.querySelector('.title');
+                    const originalTransform = title.style.transform;
+                    
+                    // Случайное смещение
+                    const x = (Math.random() - 0.5) * 10;
+                    const y = (Math.random() - 0.5) * 10;
+                    title.style.transform = `translate(${x}px, ${y}px)`;
+                    
+                    // Случайный цвет
+                    if (Math.random() < 0.5) {
+                        title.style.color = '#00ff00';
+                    } else {
+                        title.style.color = '#ff0000';
+                    }
+                    
+                    // Возвращаем обратно через короткое время
+                    setTimeout(() => {
+                        title.style.transform = originalTransform;
+                        title.style.color = '#ff0000';
+                    }, 100);
+                }
+            }, 500);
+        }
+        
+        // Эффект набора текста для лога доступа
+        function typeAccessLog() {
+            const logEntries = document.querySelectorAll('.access-log > div');
+            logEntries.forEach((entry, index) => {
+                const originalText = entry.textContent;
+                entry.textContent = '';
+                
+                setTimeout(() => {
+                    let i = 0;
+                    const typeInterval = setInterval(() => {
+                        if (i < originalText.length) {
+                            entry.textContent += originalText.charAt(i);
+                            i++;
+                        } else {
+                            clearInterval(typeInterval);
+                        }
+                    }, 30);
+                }, index * 800);
+            });
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            randomGlitchEffects();
+            typeAccessLog();
+            
+            // Добавляем звуковой эффект (опционально)
+            if (typeof AudioContext !== 'undefined') {
+                try {
+                    const audioContext = new AudioContext();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.value = 200;
+                    oscillator.type = 'sawtooth';
+                    
+                    gainNode.gain.setValueAtTime(0.05, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.5);
+                } catch (e) {
+                    console.log('Audio not supported');
+                }
+            }
+        });
+    </script>
+</body>
+</html>

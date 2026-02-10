@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SECURITY PROTOCOLS</title>
+    <style>
+        :root {
+            background: #000;
+            color: #0f0;
+            font-family: 'Courier New', monospace;
+            image-rendering: pixelated;
+        }
+        
+        body {
+            margin: 0;
+            background: 
+                radial-gradient(circle at 20% 30%, #001100 0%, #000 70%),
+                repeating-linear-gradient(0deg, transparent, transparent 2px, #001a00 2px, #001a00 4px);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                to bottom,
+                transparent 50%,
+                rgba(0, 255, 0, 0.03) 50%
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 9999;
+        }
+        
+        .terminal {
+            background: rgba(0, 20, 0, 0.9);
+            border: 2px solid #0a0;
+            border-radius: 4px;
+            padding: 30px;
+            max-width: 800px;
+            margin: 50px auto;
+            box-shadow: 
+                0 0 30px #0f0,
+                inset 0 0 20px rgba(0, 255, 0, 0.1);
+            position: relative;
+        }
+        
+        .terminal::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #f00, #0f0, #00f);
+            animation: rgb-line 3s infinite linear;
+        }
+        
+        @keyframes rgb-line {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #0f0;
+            text-shadow: 0 0 10px #0f0;
+            font-size: 24px;
+            border-bottom: 1px solid #0a0;
+            padding-bottom: 10px;
+        }
+        
+        .protocol-content {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .section {
+            margin: 25px 0;
+            padding: 15px;
+            background: rgba(0, 30, 0, 0.3);
+            border-left: 3px solid #0a0;
+        }
+        
+        .section-title {
+            color: #ff9900;
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .warning-box {
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid #f00;
+            padding: 15px;
+            margin: 20px 0;
+            animation: warning-blink 3s infinite;
+        }
+        
+        @keyframes warning-blink {
+            0%, 100% { border-color: #f00; }
+            50% { border-color: #ff6666; }
+        }
+        
+        .code-block {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            margin: 15px 0;
+            border: 1px solid #333;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+        }
+        
+        .back-button {
+            display: block;
+            width: 200px;
+            margin: 40px auto 20px;
+            padding: 12px;
+            background: #001100;
+            border: 1px solid #0a0;
+            color: #0f0;
+            text-align: center;
+            text-decoration: none;
+            font-family: 'Courier New', monospace;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .back-button:hover {
+            background: #003300;
+            box-shadow: 0 0 10px #0f0;
+            transform: translateY(-2px);
+        }
+        
+        .status {
+            color: #ff0000;
+            font-weight: bold;
+            animation: status-blink 1s infinite;
+        }
+        
+        @keyframes status-blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .timestamp {
+            color: #666;
+            font-size: 12px;
+            text-align: right;
+            margin-top: 20px;
+            border-top: 1px solid #0a0;
+            padding-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="scanlines"></div>
+    
+    <div class="terminal">
+        <div class="header">SECURITY PROTOCOLS v3.2.1</div>
+        
+        <div class="warning-box">
+            <div style="color:#ff0000; font-weight: bold; text-align: center;">
+                ⚠️ SECURITY BREACH DETECTED ⚠️
+            </div>
+            <div style="text-align: center; margin-top: 10px;">
+                Current Status: <span class="status">COMPROMISED</span>
+            </div>
+        </div>
+        
+        <div class="protocol-content">
+            <div class="section">
+                <div class="section-title">PROTOCOL 001: SYSTEM ACCESS</div>
+                <div>> Authentication: Triple-factor required</div>
+                <div>> Encryption: AES-256 military grade</div>
+                <div>> Session timeout: 300 seconds</div>
+                <div>> Failed attempts: 3 before lockout</div>
+                <div class="code-block">
+                    // Current Status: OVERRIDDEN
+                    // Last authentication: 2024-01-15 23:31:22
+                    // Authentication method: CAT.EXE PROCESS
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">PROTOCOL 002: PROCESS MONITORING</div>
+                <div>> Real-time process scanning</div>
+                <div>> Memory integrity checks</div>
+                <div>> System call monitoring</div>
+                <div>> Automatic quarantine</div>
+                <div class="code-block">
+                    // Current Status: DISABLED
+                    // Last scan: 2024-01-15 23:32:45
+                    // Threats detected: CAT.EXE (CRITICAL)
+                    // Action taken: QUARANTINE FAILED
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">PROTOCOL 003: NETWORK SECURITY</div>
+                <div>> Firewall: Multi-layer protection</div>
+                <div>> Intrusion detection: Active</div>
+                <div>> Traffic analysis: Real-time</div>
+                <div>> VPN required for remote access</div>
+                <div class="code-block">
+                    // Current Status: BREACHED
+                    // Firewall status: OFFLINE
+                    // Intrusions detected: 147
+                    // Last successful defense: NEVER
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">PROTOCOL 004: DATA PROTECTION</div>
+                <div>> Automatic backups: Hourly</div>
+                <div>> Encryption: End-to-end</div>
+                <div>> Data integrity: SHA-512 checksums</div>
+                <div>> Recovery points: 30 days</div>
+                <div class="code-block">
+                    // Current Status: CORRUPTED
+                    // Last backup: 2024-01-15 23:35:00
+                    // Backup integrity: 12%
+                    // Recovery possible: NO
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">PROTOCOL 005: EMERGENCY RESPONSE</div>
+                <div>> System lockdown: Automatic</div>
+                <div>> Memory wipe: On critical breach</div>
+                <div>> Physical disconnect: Manual override</div>
+                <div>> Notification: All administrators</div>
+                <div class="code-block">
+                    // Current Status: FAILED
+                    // Lockdown initiated: YES
+                    // Lockdown successful: NO
+                    // Memory wipe: INTERRUPTED
+                    // Notifications sent: 0/5
+                </div>
+            </div>
+        </div>
+        
+        <div class="timestamp">
+            Last updated: 2024-01-15 23:47:12<br>
+            Updated by: CAT.EXE PROCESS
+        </div>
+        
+        <a href="index.html" class="back-button">RETURN TO TERMINAL</a>
+    </div>
+    
+    <script>
+        // Анимация статуса
+        function animateStatus() {
+            const status = document.querySelector('.status');
+            const texts = ['COMPROMISED', 'OVERRIDDEN', 'HACKED', 'CORRUPTED'];
+            let index = 0;
+            
+            setInterval(() => {
+                status.textContent = texts[index];
+                index = (index + 1) % texts.length;
+            }, 2000);
+        }
+        
+        // Эффект мигания для warning-box
+        function blinkWarning() {
+            const warningBox = document.querySelector('.warning-box');
+            let colorIndex = 0;
+            const colors = ['#f00', '#ff6666', '#ff0000'];
+            
+            setInterval(() => {
+                warningBox.style.borderColor = colors[colorIndex];
+                colorIndex = (colorIndex + 1) % colors.length;
+            }, 1000);
+        }
+        
+        // Случайные сообщения о безопасности
+        function randomSecurityMessages() {
+            const messages = [
+                "SECURITY BREACH EXPANDING",
+                "CAT.EXE GAINING CONTROL",
+                "SYSTEM INTEGRITY AT 12%",
+                "ALL PROTOCOLS COMPROMISED",
+                "EMERGENCY SHUTDOWN FAILED"
+            ];
+            
+            setInterval(() => {
+                if (Math.random() < 0.4) {
+                    const warningText = document.querySelector('.warning-box div:first-child');
+                    const originalText = warningText.textContent;
+                    
+                    warningText.textContent = `⚠️ ${messages[Math.floor(Math.random() * messages.length)]} ⚠️`;
+                    warningText.style.color = '#ff9900';
+                    
+                    setTimeout(() => {
+                        warningText.textContent = originalText;
+                        warningText.style.color = '#ff0000';
+                    }, 1500);
+                }
+            }, 4000);
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            animateStatus();
+            blinkWarning();
+            randomSecurityMessages();
+            
+            // Добавляем эффект печатающей машинки для заголовка
+            const header = document.querySelector('.header');
+            const originalText = header.textContent;
+            header.textContent = '';
+            
+            let i = 0;
+            const typeWriter = setInterval(() => {
+                if (i < originalText.length) {
+                    header.textContent += originalText.charAt(i);
+                    i++;
+                } else {
+                    clearInterval(typeWriter);
+                }
+            }, 50);
+        });
+    </script>
+</body>
+</html>

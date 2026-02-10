@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEMORY DUMP ANALYSIS</title>
+    <style>
+        :root {
+            background: #000;
+            color: #0f0;
+            font-family: 'Courier New', monospace;
+            image-rendering: pixelated;
+        }
+        
+        body {
+            margin: 0;
+            background: 
+                radial-gradient(circle at 20% 30%, #001100 0%, #000 70%),
+                repeating-linear-gradient(0deg, transparent, transparent 2px, #001a00 2px, #001a00 4px);
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+        
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                to bottom,
+                transparent 50%,
+                rgba(0, 255, 0, 0.03) 50%
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 9999;
+        }
+        
+        .terminal {
+            background: rgba(0, 20, 0, 0.9);
+            border: 2px solid #0a0;
+            border-radius: 4px;
+            padding: 30px;
+            max-width: 900px;
+            margin: 50px auto;
+            box-shadow: 
+                0 0 30px #0f0,
+                inset 0 0 20px rgba(0, 255, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .terminal::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #f00, #0f0, #00f);
+            animation: rgb-line 3s infinite linear;
+        }
+        
+        @keyframes rgb-line {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #ff0000;
+            text-shadow: 0 0 10px #f00;
+            font-size: 24px;
+        }
+        
+        .memory-data {
+            font-size: 12px;
+            line-height: 1.3;
+            white-space: pre;
+            overflow-x: auto;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            border: 1px solid #0a0;
+            max-height: 500px;
+            overflow-y: scroll;
+        }
+        
+        .hex-block {
+            display: flex;
+            margin-bottom: 2px;
+        }
+        
+        .address {
+            color: #ff9900;
+            min-width: 60px;
+        }
+        
+        .hex {
+            color: #0f0;
+            margin-left: 10px;
+        }
+        
+        .ascii {
+            color: #666;
+            margin-left: 20px;
+        }
+        
+        .corrupted {
+            color: #ff0000;
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
+        .analysis {
+            margin-top: 30px;
+            padding: 15px;
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid #f00;
+        }
+        
+        .back-button {
+            display: block;
+            width: 200px;
+            margin: 30px auto;
+            padding: 10px;
+            background: #001100;
+            border: 1px solid #0a0;
+            color: #0f0;
+            text-align: center;
+            text-decoration: none;
+            font-family: 'Courier New', monospace;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .back-button:hover {
+            background: #003300;
+            box-shadow: 0 0 10px #0f0;
+        }
+        
+        .warning {
+            color: #ff0000;
+            text-align: center;
+            margin: 20px 0;
+            animation: warning-blink 2s infinite;
+        }
+        
+        @keyframes warning-blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <div class="scanlines"></div>
+    
+    <div class="terminal">
+        <div class="header">MEMORY DUMP ANALYSIS - SECTOR 0x7F</div>
+        
+        <div class="warning">
+            ⚠️ WARNING: CORRUPTED MEMORY DETECTED ⚠️
+        </div>
+        
+        <div class="memory-data" id="memoryData">
+            <!-- Memory data will be generated here -->
+        </div>
+        
+        <div class="analysis">
+            <div style="color:#ff0000; margin-bottom: 10px;">ANALYSIS RESULTS:</div>
+            <div>> Memory corruption level: 89%</div>
+            <div>> CAT.EXE process signatures detected</div>
+            <div>> System calls intercepted</div>
+            <div>> Kernel memory overwritten</div>
+            <div>> Recovery impossible</div>
+        </div>
+        
+        <a href="index.html" class="back-button">RETURN TO TERMINAL</a>
+    </div>
+    
+    <script>
+        // Генерация шестнадцатеричного дампа памяти
+        function generateMemoryDump() {
+            const memoryData = document.getElementById('memoryData');
+            const hexChars = '0123456789ABCDEF';
+            let dump = '';
+            
+            for (let i = 0; i < 256; i++) {
+                const address = (0x7F000 + i * 16).toString(16).toUpperCase().padStart(6, '0');
+                let hex = '';
+                let ascii = '';
+                
+                for (let j = 0; j < 16; j++) {
+                    const byte = Math.floor(Math.random() * 256);
+                    hex += byte.toString(16).toUpperCase().padStart(2, '0') + ' ';
+                    
+                    // ASCII представление
+                    if (byte >= 32 && byte <= 126) {
+                        ascii += String.fromCharCode(byte);
+                    } else {
+                        ascii += '.';
+                    }
+                    
+                    // Случайная коррупция
+                    if (Math.random() < 0.3) {
+                        hex = hex.slice(0, -3) + '<span class="corrupted">' + 
+                              '??' + '</span> ';
+                        ascii = ascii.slice(0, -1) + '<span class="corrupted">?</span>';
+                    }
+                }
+                
+                // Специальные сигнатуры CAT.EXE
+                if (i === 128 || i === 129) {
+                    hex = '<span class="corrupted">43 41 54 2E 45 58 45 20 50 52 4F 43 45 53 53 20</span>';
+                    ascii = '<span class="corrupted">CAT.EXE PROCESS </span>';
+                }
+                
+                dump += `<div class="hex-block">
+                    <div class="address">0x${address}:</div>
+                    <div class="hex">${hex}</div>
+                    <div class="ascii">${ascii}</div>
+                </div>`;
+            }
+            
+            memoryData.innerHTML = dump;
+        }
+        
+        // Анимация коррупции
+        function corruptAnimation() {
+            const corrupted = document.querySelectorAll('.corrupted');
+            corrupted.forEach(el => {
+                setInterval(() => {
+                    el.style.opacity = el.style.opacity === '0.3' ? '1' : '0.3';
+                }, 500);
+            });
+        }
+        
+        // Случайные сообщения о коррупции
+        function randomCorruptionMessages() {
+            const messages = [
+                "MEMORY INTEGRITY VIOLATION",
+                "CAT.EXE SIGNATURE DETECTED",
+                "SYSTEM CALL INTERCEPTED",
+                "KERNEL MEMORY OVERWRITTEN",
+                "PROCESS HIJACK IN PROGRESS",
+                "SECURITY PROTOCOLS FAILED"
+            ];
+            
+            setInterval(() => {
+                if (Math.random() < 0.3) {
+                    const warning = document.querySelector('.warning');
+                    warning.textContent = `⚠️ ${messages[Math.floor(Math.random() * messages.length)]} ⚠️`;
+                    
+                    setTimeout(() => {
+                        warning.textContent = '⚠️ WARNING: CORRUPTED MEMORY DETECTED ⚠️';
+                    }, 2000);
+                }
+            }, 3000);
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            generateMemoryDump();
+            corruptAnimation();
+            randomCorruptionMessages();
+            
+            // Эффект скролла для дампа памяти
+            const memoryData = document.getElementById('memoryData');
+            let scrollPos = 0;
+            
+            setInterval(() => {
+                scrollPos += 1;
+                memoryData.scrollTop = scrollPos;
+                
+                if (scrollPos > memoryData.scrollHeight - memoryData.clientHeight) {
+                    scrollPos = 0;
+                }
+            }, 50);
+        });
+    </script>
+</body>
+</html>
